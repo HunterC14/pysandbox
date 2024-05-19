@@ -1,7 +1,7 @@
 import pygame
-from grid import Grid
-from panel import Panel
-from constants import WIDTH, HEIGHT, PANEL_WIDTH, BLACK
+from .grid import Grid
+from .panel import Panel
+from .constants import WIDTH, HEIGHT, PANEL_WIDTH, BLACK
 
 def init():
     # Initialize Pygame

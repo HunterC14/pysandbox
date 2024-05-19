@@ -1,8 +1,8 @@
 import numpy as np
 import pygame
 import random
-from constants import CELL_SIZE, COLS, ROWS
-from elements import elements, get_element, Element, CommandError
+from .constants import CELL_SIZE, COLS, ROWS
+from .elements import elements, get_element, Element, CommandError
 
 class Grid:
     def __init__(self):

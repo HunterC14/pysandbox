@@ -1,6 +1,6 @@
 import pygame
-from constants import PANEL_WIDTH, WHITE, BLACK
-from elements import elements, get_element
+from .constants import PANEL_WIDTH, WHITE, BLACK
+from .elements import elements, get_element
 
 class Panel:
     def __init__(self, grid):
