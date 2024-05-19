@@ -1,5 +1,6 @@
 import numpy as np
 import pygame
+import random
 from constants import CELL_SIZE, COLS, ROWS
 from elements import elements, get_element, Element, CommandError
 
@@ -29,6 +30,7 @@ class Grid:
         target = behavior['target']
         action = behavior['action'].upper()
         action_coords = behavior['action_coords']
+        chance = behavior["chance"]
         
         target_row = row + condition[1]
         target_col = col + condition[0]
@@ -40,10 +42,11 @@ class Grid:
                 action_row = row + action_coords[1]
                 action_col = col + action_coords[0]
                 if 0 <= action_row < ROWS and 0 <= action_col < COLS:
-                    if action == "SWAP":
-                        self.grid[target_row, target_col], self.grid[row, col] = self.grid[row, col], self.grid[target_row, target_col]
-                    else:
-                        raise CommandError(f"Invalid action: {action}. Please check that it exists and it is spelled correctly.")
+                    if random.random() < chance:
+                        if action == "SWAP":
+                            self.grid[target_row, target_col], self.grid[row, col] = self.grid[row, col], self.grid[target_row, target_col]
+                        else:
+                            raise CommandError(f"Invalid action: {action}. Please check that it exists and it is spelled correctly.")
 
     def set_cell(self, row: int, col: int, element: Element):
         element_id = list(elements.values()).index(element)

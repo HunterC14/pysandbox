@@ -13,13 +13,14 @@ class CommandError(Exception): pass
 elements = {}
 
 def parse_behavior(behavior: str) -> None | dict[str, tuple[int, int] | str]:
-    match = re.match(r"IF \(([-\d]+),([-\d]+)\) (\w+) THEN (\w+)\(([-\d]+),([-\d]+)\)", behavior)
+    match = re.match(r"IF \(([-\d]+),([-\d]+)\) (\w+) THEN (\w+)\(([-\d]+),([-\d]+)\) CHANCE (\d{1,3})%", behavior)
     if match:
         return {
             'condition': (int(match.group(1)), int(match.group(2))),
             'target': match.group(3),
             'action': match.group(4),
-            'action_coords': (int(match.group(5)), int(match.group(6)))
+            'action_coords': (int(match.group(5)), int(match.group(6))),
+            "chance": int(match.group(7))/100
         }
     raise CommandError(f"Invalid behavior: {behavior}")
 
@@ -46,6 +47,8 @@ def load_elements(filename: str):
                 behavior = parse_behavior(line.split(maxsplit=1)[1])
                 if behavior:
                     current_element['behaviors'].append(behavior)
+            elif line:
+                raise CommandError(f"Invalid line: {line}")
         if current_element:
             elements[current_element['key']] = Element(
                 current_element['name'],
