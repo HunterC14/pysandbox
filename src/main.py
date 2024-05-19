@@ -3,14 +3,16 @@ from grid import Grid
 from panel import Panel
 from constants import WIDTH, HEIGHT, PANEL_WIDTH, BLACK
 
-# Initialize Pygame
-pygame.init()
+def init():
+    # Initialize Pygame
+    pygame.init()
 
-# Create the screen
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Falling Sand Game')
+    # Create the screen
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption('Falling Sand Game')
+    return screen
 
-def main():
+def main(screen):
     clock = pygame.time.Clock()
     running = True
     mouse_down = False
@@ -51,4 +53,5 @@ def main():
     pygame.quit()
 
 if __name__ == "__main__":
-    main()
+    screen = init()
+    main(screen)
