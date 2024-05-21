@@ -12,15 +12,38 @@ class CommandError(Exception): pass
 
 elements = {}
 
+def _gpuc(g: str) -> list[int]:
+    ip = re.compile(r"-?\d+")
+    im = ip.findall(g)
+    return [int(x) for x in im]
+
 def parse_behavior(behavior: str) -> None | dict[str, tuple[int, int] | str]:
-    match = re.match(r"IF \(([-\d]+),([-\d]+)\) (\w+) THEN (\w+)\(([-\d]+),([-\d]+)\) CHANCE (\d{1,3})%", behavior)
+    match = re.match(r"IF \(([-\d]+),([-\d]+)\) (\w+) THEN (\w+)\(([-\d]+),([-\d]+)\) CHANCE (\d{1,3})% SKIP \[((-?\d+,?)*)\]", behavior)
     if match:
         return {
+            "type":"action",
             'condition': (int(match.group(1)), int(match.group(2))),
             'target': match.group(3),
             'action': match.group(4),
             'action_coords': (int(match.group(5)), int(match.group(6))),
-            "chance": int(match.group(7))/100
+            "chance": int(match.group(7))/100,
+            "skips": _gpuc(match.group(8))
+        }
+    match = re.match(r"DATA ORDERED ([01])", behavior)
+    if match:
+        return {
+            "type":"data",
+            "change":{
+                "ordered":{"value":bool(int(match.group(1)))}
+            }
+        }
+    match = re.match(r"DATA EXTRA KEY:(\d+) VAL:(\d+)", behavior)
+    if match:
+        return {
+            "type":"data",
+            "change":{
+                "extra":{int(match.group(1)):int(match.group(2))}
+            }
         }
     raise CommandError(f"Invalid behavior: {behavior}")
 
