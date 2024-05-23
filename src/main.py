@@ -2,6 +2,7 @@ import pygame
 from .grid import Grid
 from .panel import Panel
 from .constants import WIDTH, HEIGHT, PANEL_WIDTH, BLACK
+from . import line
 
 def init():
     # Initialize Pygame
@@ -12,7 +13,7 @@ def init():
     pygame.display.set_caption('Falling Sand Game')
     return screen
 
-def main(screen):
+def main(screen: pygame.Surface):
     clock = pygame.time.Clock()
     running = True
     mouse_down = False
@@ -31,18 +32,23 @@ def main(screen):
                     panel.handle_click(x, y)
                 else:
                     mouse_down = True
+                    prev_pos = None
 
             if event.type == pygame.MOUSEBUTTONUP:
                 mouse_down = False
-
+        
+        grid.update()
+        
         if mouse_down:
             x, y = pygame.mouse.get_pos()
             if x < WIDTH - PANEL_WIDTH:
                 col = x // grid.cell_size
                 row = y // grid.cell_size
-                grid.set_cell(row, col, panel.selected_element)
-
-        grid.update()
+                if prev_pos is None:
+                    grid.set_cell(row, col, panel.selected_element)
+                else:
+                    line.funcline((row,col),prev_pos,grid.set_cell,[panel.selected_element])
+            prev_pos = (row,col)
 
         screen.fill(BLACK)
         grid.draw(screen)
