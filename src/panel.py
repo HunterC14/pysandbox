@@ -5,7 +5,7 @@ from .elements import elements, get_element, Element
 class Panel:
     def __init__(self, grid):
         self.width = PANEL_WIDTH
-        self.selected_element_id = 1  # Default to 'Sand'
+        self.selected_element_id = 1
         self.grid = grid
 
     def draw(self, screen: pygame.Surface):

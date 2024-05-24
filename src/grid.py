@@ -4,6 +4,8 @@ import random
 from .constants import CELL_SIZE, COLS, ROWS
 from .elements import elements, get_element, Element, CommandError
 
+random.seed()
+
 class Grid:
     def __init__(self):
         self.cell_size = CELL_SIZE
