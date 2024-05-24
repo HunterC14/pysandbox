@@ -1,7 +1,7 @@
 import pygame
 from .grid import Grid
 from .panel import Panel
-from .constants import WIDTH, HEIGHT, PANEL_WIDTH, BLACK
+from .constants import WIDTH, HEIGHT, PANEL_WIDTH
 from . import line
 
 def init():
@@ -38,7 +38,7 @@ def main(screen: pygame.Surface):
                 mouse_down = False
         
         grid.update()
-        
+
         if mouse_down:
             x, y = pygame.mouse.get_pos()
             if x < WIDTH - PANEL_WIDTH:
@@ -50,7 +50,6 @@ def main(screen: pygame.Surface):
                     line.funcline((row,col),prev_pos,grid.set_cell,[panel.selected_element])
             prev_pos = (row,col)
 
-        screen.fill(BLACK)
         grid.draw(screen)
         panel.draw(screen)
         pygame.display.flip()
