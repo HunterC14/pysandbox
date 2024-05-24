@@ -8,3 +8,7 @@ It is human-readable, however, it requires strict syntax, so it's a bit annoying
 If you take a quick look-through, you will see some obvious numbers that can be changed.  
 Some examples, are the color values. These are easily changable, but remember, ***strict syntax***!  
 You may also notice the chances for falling. These chances are in percent, and they don't support floating point.
+
+## Playing
+
+Use `python3.11 .` to start.
