@@ -17,7 +17,7 @@ def _gpuc(g: str) -> list[int]:
     im = ip.findall(g)
     return [int(x) for x in im]
 
-def parse_behavior(behavior: str) -> None | dict[str, tuple[int, int] | str]:
+def parse_behavior(behavior: str) -> dict[str, tuple[int, int] | str]:
     match = re.match(r"IF \(([-\d]+),([-\d]+)\) (\w+) THEN (\w+)\(([-\d]+),([-\d]+)\) CHANCE (\d{1,3})% SKIP \[((-?\d+,?)*)\]", behavior)
     if match:
         return {

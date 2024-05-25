@@ -1,7 +1,7 @@
 import pygame
 from .grid import Grid
 from .panel import Panel
-from .constants import WIDTH, HEIGHT, PANEL_WIDTH
+from .constants import WIDTH, HEIGHT, PANEL_WIDTH, get_kn
 from . import line
 
 def init():
@@ -17,6 +17,7 @@ def main(screen: pygame.Surface):
     clock = pygame.time.Clock()
     running = True
     mouse_down = False
+    size = 1
 
     grid = Grid()
     panel = Panel(grid)
@@ -26,7 +27,7 @@ def main(screen: pygame.Surface):
             if event.type == pygame.QUIT:
                 running = False
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 if x > WIDTH - PANEL_WIDTH:
                     panel.handle_click(x, y)
@@ -34,8 +35,15 @@ def main(screen: pygame.Surface):
                     mouse_down = True
                     prev_pos = None
 
-            if event.type == pygame.MOUSEBUTTONUP:
+            elif event.type == pygame.MOUSEBUTTONUP:
                 mouse_down = False
+            elif event.type == pygame.KEYUP:
+                try:
+                    key = get_kn(event.key)
+                except ValueError:
+                    key = None
+                if key is not None:
+                    size = key
         
         grid.update()
 
@@ -45,13 +53,13 @@ def main(screen: pygame.Surface):
                 col = x // grid.cell_size
                 row = y // grid.cell_size
                 if prev_pos is None:
-                    grid.set_cell(row, col, panel.selected_element)
+                    grid.set_cells(row, col, panel.selected_element, size)
                 else:
-                    line.funcline((row,col),prev_pos,grid.set_cell,[panel.selected_element])
+                    line.funcline((row,col),prev_pos,grid.set_cells,[panel.selected_element, size])
             prev_pos = (row,col)
 
         grid.draw(screen)
-        panel.draw(screen)
+        panel.draw(screen, {"size": size})
         pygame.display.flip()
         clock.tick(60)
 

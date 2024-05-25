@@ -1,6 +1,7 @@
 import numpy as np
 import pygame
 import random
+import typing
 from .constants import CELL_SIZE, COLS, ROWS
 from .elements import elements, get_element, Element, CommandError
 
@@ -52,7 +53,7 @@ class Grid:
                                 raise AssertionError(f"Invalid action: {action}")
 
 
-    def apply_behavior(self,row:int,col:int,behavior:dict[str,str|tuple[int,int]],data:dict[str,dict[str,bool]|dict[int,int]]) -> list[dict[str, str | int]]:
+    def apply_behavior(self,row:int,col:int,behavior:dict[str,str|tuple[int,int]],data:dict[str,dict[str,bool]|dict[int,int]])->list[dict[str,str|int]]:
         output_actions = []
         if behavior["type"] == "action":
             condition = behavior['condition']
@@ -93,8 +94,33 @@ class Grid:
         else:
             raise AssertionError("Invalid behavior type")
         return output_actions
-
+    
+    @staticmethod
+    def rectpos(lx:int,ly:int,sx:int=0,sy:int=0)->list[tuple[int,int]]:
+        spots = []
+        for x in range(lx + 1):
+            for y in range(ly + 1):
+                spots.append((sx + x, sy + y))
+        return spots
+    
+    def processcells(self, cells: list[tuple[int, int]], placewith: Element) -> None:
+        for x, y in cells:
+            if x >= 0 and y >= 0:
+                if x < ROWS and y < COLS:
+                    self.set_cell(x, y, placewith)
 
     def set_cell(self, row: int, col: int, element: Element):
         element_id = list(elements.values()).index(element)
         self.grid[row, col] = element_id
+    
+    def set_cells(self, row: int, col: int, element: Element, size: int = 1) -> None:
+        csize = size - 1
+        hcs = csize / 2
+        bsx = row - hcs
+        bsy = col - hcs
+        bex = row + hcs
+        bey = col + hcs
+        bdx = bex - bsx
+        bdy = bey - bsy
+        spots = Grid.rectpos(round(bdx), round(bdy), round(bsx), round(bsy))
+        self.processcells(spots, element)
