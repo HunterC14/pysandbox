@@ -11,4 +11,8 @@ You may also notice the chances for falling. These chances are in percent, and t
 
 ## Playing
 
-Use `python3.11 .` to start.
+Use `python3.11 .` to start.  
+Click on one of the element names to switch to that element.  
+Click and hold on the canvas to put that element on the canvas wherever your cursor is.  
+Use the number keys to edit the size of your brush.  
+Click the `Pause` button on the top of the gray panel to pause. It should now say `Paused`. Click again to unpause it.
