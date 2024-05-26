@@ -9,13 +9,16 @@ class Panel:
         self.selected_element_id = 1
         self.grid = grid
 
-    def draw(self, screen: pygame.Surface, data: dict[typing.Literal["size"], int]):
+    def draw(self,screen:pygame.Surface,data:dict[typing.Literal["size","paused"],int|typing.Literal[0,1]]):
         pygame.draw.rect(screen, WHITE, (screen.get_width() - self.width, 0, self.width, screen.get_height()))
 
         cx = screen.get_width() - self.width + 10
         font = pygame.font.Font(None, 36)
         size_text = font.render(f"Size: {data['size']}", True, BLACK)
         screen.blit(size_text, (cx, 20))
+        pause_display_text = "Pause" + ("d" if data["paused"] else "")
+        pause_text = font.render(pause_display_text, True, BLACK)
+        screen.blit(pause_text, (cx, 60))
         y = 80
         for element_id, element in elements.items():
             text = font.render(element.name, True, BLACK)
@@ -24,7 +27,10 @@ class Panel:
                 pygame.draw.rect(screen, element.color, (screen.get_width() - self.width + 5, y - 5, self.width - 10, 30), 2)
             y += 40
 
-    def handle_click(self, x: int, y: int):
+    def handle_click(self, x: int, y: int, data: dict[str, int]):
+        if 60 <= y < 90:
+            data["paused"] = not data["paused"]
+            return
         y_offset = 80
         for element_id, element in elements.items():
             if y_offset <= y < y_offset + 30:
