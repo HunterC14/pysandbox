@@ -18,7 +18,7 @@ def _gpuc(g: str) -> list[int]:
     return [int(x) for x in im]
 
 def parse_behavior(behavior: str) -> dict[str, tuple[int, int] | str]:
-    match = re.match(r"IF \(([-\d]+),([-\d]+)\) (\w+) THEN (\w+)\(([-\d]+),([-\d]+)\) CHANCE (\d{1,3})% SKIP \[((-?\d+,?)*)\]", behavior)
+    match = re.match(r"IF \(([-\d]+),([-\d]+)\) (\w+) THEN (\w+)\(([-\d]+),([-\d]+)\) CHANCE (\d{1,3})% AS (\w+) SKIP \[((-?\d+,?)*)\]", behavior)
     if match:
         return {
             "type":"action",
@@ -27,7 +27,8 @@ def parse_behavior(behavior: str) -> dict[str, tuple[int, int] | str]:
             'action': match.group(4),
             'action_coords': (int(match.group(5)), int(match.group(6))),
             "chance": int(match.group(7))/100,
-            "skips": _gpuc(match.group(8))
+            "skips": _gpuc(match.group(9)),
+            "as": match.group(8)
         }
     match = re.match(r"DATA ORDERED ([01])", behavior)
     if match:

@@ -62,6 +62,7 @@ class Grid:
             action_coords = behavior['action_coords']
             chance = behavior["chance"]
             skips = behavior["skips"]
+            aselm = behavior["as"]
             
             target_row = row + condition[1]
             target_col = col + condition[0]
@@ -74,8 +75,11 @@ class Grid:
                     action_col = col + action_coords[0]
                     if 0 <= action_row < ROWS and 0 <= action_col < COLS:
                         if random.random() < chance:
+                            ne = list(elements.keys()).index(aselm)
                             if action == "SWAP":
-                                self.grid[target_row, target_col], self.grid[row, col] = self.grid[row, col], self.grid[target_row, target_col]
+                                self.grid[target_row, target_col], self.grid[row, col] = ne, self.grid[target_row, target_col]
+                            elif action == "COPY":
+                                self.grid[target_row, target_col] = ne
                             else:
                                 raise CommandError(f"Invalid action: {action}. Please check that it exists and it is spelled correctly.")
                         else:
