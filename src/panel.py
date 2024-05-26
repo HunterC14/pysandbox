@@ -19,7 +19,7 @@ class Panel:
         pause_display_text = "Pause" + ("d" if data["paused"] else "")
         pause_text = font.render(pause_display_text, True, BLACK)
         screen.blit(pause_text, (cx, 60))
-        y = 80
+        y = 100
         for element_id, element in elements.items():
             text = font.render(element.name, True, BLACK)
             screen.blit(text, (cx, y))
@@ -31,7 +31,7 @@ class Panel:
         if 60 <= y < 90:
             data["paused"] = not data["paused"]
             return
-        y_offset = 80
+        y_offset = 100
         for element_id, element in elements.items():
             if y_offset <= y < y_offset + 30:
                 self.selected_element_id = list(elements.keys()).index(element_id)
