@@ -8,9 +8,3 @@ COLS = (WIDTH - PANEL_WIDTH) // CELL_SIZE
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-
-def get_kn(keypress: int) -> int:
-    key = keypress - 48
-    if key > 9 or key < 0:
-        raise ValueError(f"Invalid key: (Input: {keypress}, Keyget: {key})")
-    return key

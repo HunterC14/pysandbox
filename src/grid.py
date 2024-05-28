@@ -84,8 +84,12 @@ class Grid:
                                 raise CommandError(f"Invalid action: {action}. Please check that it exists and it is spelled correctly.")
                         else:
                             skips = []
+                    else:
+                        skips = []
                 else:
                     skips = []
+            else:
+                skips = []
             for skip in skips:
                 output_actions.append({"action":"skip","value":skip})
         elif behavior["type"] == "data":

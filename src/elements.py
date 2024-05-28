@@ -77,12 +77,4 @@ def load_elements(filename: str):
             elements[current_element['key']] = Element(
                 current_element['name'],
                 eid,
-                current_element['color'],
-                current_element['behaviors']
-            )
-
-def get_element(element_id: int) -> Element:
-    keys = list(elements.keys())
-    return elements.get(keys[element_id])
-
-load_elements('elements.txt')
+                current_element['
