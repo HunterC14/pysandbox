@@ -49,4 +49,23 @@ def main(screen: pygame.Surface):
             grid.update()
 
         if mouse_down:
-            x, y = pygame.mouse.get_
+            x, y = pygame.mouse.get_pos()
+            if x < WIDTH - PANEL_WIDTH:
+                col = x // grid.cell_size
+                row = y // grid.cell_size
+                if prev_pos is None:
+                    grid.set_cells(row, col, panel.selected_element, data["size"])
+                else:
+                    line.funcline((row,col),prev_pos,grid.set_cells,[panel.selected_element, data["size"]])
+            prev_pos = (row,col)
+
+        grid.draw(screen)
+        panel.draw(screen, data)
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+
+if __name__ == "__main__":
+    screen = init()
+    main(screen)
