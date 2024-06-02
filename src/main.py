@@ -5,6 +5,9 @@ from .grid import Grid
 from .panel import Panel
 from .constants import WIDTH, HEIGHT, PANEL_WIDTH, get_kn
 from . import line
+from . import config
+
+FPS = config["settings"]["runtime"]["FPS"]
 
 def init():
     # Initialize Pygame
@@ -66,7 +69,7 @@ def main(screen: pygame.Surface):
         grid.draw(screen)
         panel.draw(screen, data)
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(FPS)
 
     pygame.quit()
 

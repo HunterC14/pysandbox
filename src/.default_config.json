@@ -11,6 +11,9 @@
                 "panel-width": 100,
                 "cell-size": 5
             }
+        },
+        "runtime": {
+            "FPS": 60
         }
     }
 }
