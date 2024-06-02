@@ -11,8 +11,10 @@ def init():
     pygame.init()
 
     # Create the screen
+    icon = pygame.image.load("../assets/favicon.png") 
+    pygame.display.set_icon(icon)
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption('Falling Sand Game')
+    pygame.display.set_caption("Sand Box")
     return screen
 
 def main(screen: pygame.Surface):
