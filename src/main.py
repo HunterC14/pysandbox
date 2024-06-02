@@ -1,4 +1,6 @@
 import pygame
+from .configfixer import refresh as _fixconf
+_fixconf()
 from .grid import Grid
 from .panel import Panel
 from .constants import WIDTH, HEIGHT, PANEL_WIDTH, get_kn

@@ -1,14 +1,17 @@
 import numpy as np
 import pygame
 import random
-import typing
-from .constants import CELL_SIZE, COLS, ROWS
+#from typing import Literal
+from .constants import CELL_SIZE, COLS, ROWS, READ, NamObj
 from .elements import elements, get_element, Element, CommandError
+from . import config
 
+
+cell_count = ROWS * COLS
 random.seed()
 
 class Grid:
-    def __init__(self):
+    def __init__(self, conf: dict | NamObj = READ):
         self.cell_size = CELL_SIZE
         self.grid = np.zeros((ROWS, COLS), dtype=int)
         self.data = {
@@ -18,6 +21,12 @@ class Grid:
             "extra":{
             }
         }
+        if conf is READ:
+            conf = config
+        active_settings = conf["settings"]
+        update_settings = active_settings["update"]
+        self.order = update_settings["activation-order"]
+        self.quantity = update_settings["quantity"]
 
     def draw(self, screen: pygame.Surface):
         for row in range(ROWS):
@@ -26,31 +35,60 @@ class Grid:
                 element = get_element(element_id)
                 pygame.draw.rect(screen, element.color, (col * self.cell_size, row * self.cell_size, self.cell_size, self.cell_size))
 
+    def processcell(self, row: int, col: int):
+        element_id = self.grid[row, col]
+        element = get_element(element_id)
+        if element:
+            self.data["ordered"] |= {"value":True}
+            need_doing = list(range(len(element.behaviors)))
+            while True:
+                if len(need_doing) == 0:
+                        break
+                if self.data["ordered"]["value"]:
+                    new = min(need_doing)
+                else:
+                    new = random.choice(need_doing)
+                need_doing.remove(new)
+                behavior = element.behaviors[new]
+                actions = self.apply_behavior(row, col, behavior, self.data)
+                for action in actions:
+                    if action["action"] == "skip":
+                        skipval = action["value"] + new
+                        if skipval in need_doing:
+                            need_doing.remove(skipval)
+                    else:
+                        raise AssertionError(f"Invalid action: {action}")
+
     def update(self):
-        for row in range(ROWS - 2, -1, -1):
-            for col in range(COLS):
-                element_id = self.grid[row, col]
-                element = get_element(element_id)
-                if element:
-                    self.data["ordered"] |= {"value":True}
-                    need_doing = list(range(len(element.behaviors)))
-                    while True:
-                        if len(need_doing) == 0:
-                                break
-                        if self.data["ordered"]["value"]:
-                            new = min(need_doing)
-                        else:
-                            new = random.choice(need_doing)
-                        need_doing.remove(new)
-                        behavior = element.behaviors[new]
-                        actions = self.apply_behavior(row, col, behavior, self.data)
-                        for action in actions:
-                            if action["action"] == "skip":
-                                skipval = action["value"] + new
-                                if skipval in need_doing:
-                                    need_doing.remove(skipval)
-                            else:
-                                raise AssertionError(f"Invalid action: {action}")
+        def process1to4(cd:int,R:int,S1:int,X1:int,C:int,S2:int,X2:int)->None:
+            for row in range(R, S1, X1):
+                for col in range(C, S2, X2):
+                    if cd == 0:
+                        return
+                    self.processcell(row, col)
+                    cd -= 1
+        order = self.order
+        quantity = self.quantity
+        countdown = round(quantity * cell_count)
+        if order == 0:
+            undone = list(range(cell_count))
+            random.shuffle(undone)
+            for n in undone:
+                if countdown == 0:
+                    break
+                row, col = divmod(n, COLS)
+                self.processcell(row, col)
+                countdown -= 1
+        elif order == 1:
+            process1to4(countdown, ROWS - 1, -1, -1, 0, COLS, 1)
+        elif order == 2:
+            process1to4(countdown, 0, ROWS, 1, 0, COLS, 1)
+        elif order == 3:
+            process1to4(countdown, 0, ROWS, 1, COLS - 1, -1, -1)
+        elif order == 4:
+            process1to4(countdown, ROWS - 1, -1, -1, COLS - 1, -1, -1)
+        else:
+            assert False, f"Invalid order, {order}"
 
 
     def apply_behavior(self,row:int,col:int,behavior:dict[str,str|tuple[int,int]],data:dict[str,dict[str,bool]|dict[int,int]])->list[dict[str,str|int]]:

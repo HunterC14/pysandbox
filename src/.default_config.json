@@ -1,0 +1,16 @@
+{
+    "settings": {
+        "update": {
+            "activation-order": 0,
+            "quantity": 1
+        },
+        "world": {
+            "rows": 120,
+            "cols": 160,
+            "display": {
+                "panel-width": 100,
+                "cell-size": 5
+            }
+        }
+    }
+}
