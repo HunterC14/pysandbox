@@ -2,7 +2,8 @@ import numpy as np
 import pygame
 import random
 #from typing import Literal
-from .constants import CELL_SIZE, COLS, ROWS, READ, NamObj
+from .constants import CELL_SIZE, COLS, ROWS, READ, NamObj, NoneCallable, upround
+import typing
 from .elements import elements, get_element, Element, CommandError
 from . import config
 
@@ -142,11 +143,15 @@ class Grid:
         return output_actions
     
     @staticmethod
-    def rectpos(lx:int,ly:int,sx:int=0,sy:int=0)->list[tuple[int,int]]:
+    def rectpos(lx:int|float,ly:int|float,sx:int|float=0,sy:int|float=0,apply:typing.Callable[[int|float],int|float]=NoneCallable)->list[tuple[int,int]]:
         spots = []
-        for x in range(lx + 1):
-            for y in range(ly + 1):
-                spots.append((sx + x, sy + y))
+        dpartx = lx % 1
+        dparty = ly % 1
+        flx = round(lx - dpartx)
+        fly = round(ly - dparty)
+        for x in range(flx + 1):
+            for y in range(fly + 1):
+                spots.append((apply(sx + x + dpartx), apply(sy + y + dparty)))
         return spots
     
     def processcells(self, cells: list[tuple[int, int]], placewith: Element) -> None:
@@ -168,5 +173,5 @@ class Grid:
         bey = col + hcs
         bdx = bex - bsx
         bdy = bey - bsy
-        spots = Grid.rectpos(round(bdx), round(bdy), round(bsx), round(bsy))
+        spots = Grid.rectpos(bdx, bdy, bsx, bsy, upround)
         self.processcells(spots, element)

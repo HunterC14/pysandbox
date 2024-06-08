@@ -4,4 +4,4 @@ if __name__ == "__main__":
     screen = init()
     main(screen)
 else:
-    raise Exception("Not supposed to be imported")
+    raise AssertionError("Name is not __main__")

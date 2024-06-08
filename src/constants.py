@@ -1,4 +1,5 @@
 from . import config
+import math
 
 settings = config["settings"]
 ws = settings["world"]
@@ -20,6 +21,19 @@ def get_kn(keypress: int) -> int:
     if key > 9 or key < 0:
         raise ValueError(f"Invalid key: (Input: {keypress}, Keyget: {key})")
     return key
+
+def NoneCallable(*params, **kwds):
+    if len(params) == 0:
+        return
+    elif len(params) == 1:
+        return params[0]
+    return params
+
+def upround(n: int | float) -> int:
+    counterpart = n % 1
+    if counterpart == .5:
+        return math.ceil(n)
+    return round(n)
 
 class NamObj:
     def __init__(self, name: str):
