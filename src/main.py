@@ -1,11 +1,11 @@
 import pygame
-from .configfixer import refresh as _fixconf
-_fixconf()
 from .grid import Grid
 from .panel import Panel
 from .constants import WIDTH, HEIGHT, PANEL_WIDTH, get_kn
 from . import line
-from . import config
+from . import configreader
+
+config = configreader.readconf()
 
 FPS = config["settings"]["runtime"]["FPS"]
 

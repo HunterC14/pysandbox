@@ -1,4 +1,5 @@
-from . import config
+from . import configreader
+config = configreader.readconf()
 import math
 
 settings = config["settings"]
@@ -44,6 +45,15 @@ class NamObj:
         return self.name == other.name
     def __str__(self):
         return self.name
+    def __repr__(self):
+        return str(self)
+
+class OPERATION:
+    def __init__(self, op: str, n: int):
+        self.n = n
+        self.op = op
+    def __str__(self):
+        return f"OPERATION {self.op} EK{str(self.n)}"
     def __repr__(self):
         return str(self)
 

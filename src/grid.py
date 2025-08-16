@@ -1,11 +1,13 @@
 import numpy as np
 import pygame
 import random
+from copy import deepcopy
 #from typing import Literal
-from .constants import CELL_SIZE, COLS, ROWS, READ, NamObj, NoneCallable, upround
+from .constants import CELL_SIZE, COLS, ROWS, READ, NamObj, NoneCallable, upround, OPERATION
 import typing
 from .elements import elements, get_element, Element, CommandError
-from . import config
+from . import configreader
+config = configreader.readconf()
 
 
 cell_count = ROWS * COLS
@@ -15,13 +17,7 @@ class Grid:
     def __init__(self, conf: dict | NamObj = READ):
         self.cell_size = CELL_SIZE
         self.grid = np.zeros((ROWS, COLS), dtype=int)
-        self.data = {
-            "ordered":{
-                "value":True
-            },
-            "extra":{
-            }
-        }
+        self.datagrid = [[{} for _ in range(COLS)] for _ in range(ROWS)]
         if conf is READ:
             conf = config
         active_settings = conf["settings"]
@@ -40,23 +36,25 @@ class Grid:
         element_id = self.grid[row, col]
         element = get_element(element_id)
         if element:
-            self.data["ordered"] |= {"value":True}
+            self.localdata = {"ordered":{"value":1},"extra":{}}
             need_doing = list(range(len(element.behaviors)))
             while True:
                 if len(need_doing) == 0:
                         break
-                if self.data["ordered"]["value"]:
+                if self.localdata["ordered"]["value"]:
                     new = min(need_doing)
                 else:
                     new = random.choice(need_doing)
                 need_doing.remove(new)
                 behavior = element.behaviors[new]
-                actions = self.apply_behavior(row, col, behavior, self.data)
+                actions = self.apply_behavior(row, col, behavior, self.localdata)
                 for action in actions:
                     if action["action"] == "skip":
                         skipval = action["value"] + new
                         if skipval in need_doing:
                             need_doing.remove(skipval)
+                    elif action["action"] == "move":
+                        row, col = action["value"]
                     else:
                         raise AssertionError(f"Invalid action: {action}")
 
@@ -94,35 +92,58 @@ class Grid:
 
     def apply_behavior(self,row:int,col:int,behavior:dict[str,str|tuple[int,int]],data:dict[str,dict[str,bool]|dict[int,int]])->list[dict[str,str|int]]:
         output_actions = []
-        if behavior["type"] == "action":
-            condition = behavior['condition']
-            target = behavior['target']
+        if behavior["type"] in ("action","dataaction","doaction"):
+            if behavior["type"] != "doaction":
+                condition = behavior['condition']
+                target = behavior['target']
             action = behavior['action'].upper()
             action_coords = behavior['action_coords']
             chance = behavior["chance"]
             skips = behavior["skips"]
             aselm = behavior["as"]
+            data = {}
+            data["extra"] = self.datagrid[row][col]
+            data["ordered"] = {"value":True}
             
-            target_row = row + condition[1]
-            target_col = col + condition[0]
-            if 0 <= target_row < ROWS and 0 <= target_col < COLS:
-                target_element_id = self.grid[target_row, target_col]
-                target_element = get_element(target_element_id)
-                
-                if target_element.id == target:
-                    action_row = row + action_coords[1]
-                    action_col = col + action_coords[0]
-                    if 0 <= action_row < ROWS and 0 <= action_col < COLS:
-                        if random.random() < chance:
-                            ne = list(elements.keys()).index(aselm)
-                            if action == "SWAP":
-                                self.grid[target_row, target_col], self.grid[row, col] = ne, self.grid[target_row, target_col]
-                            elif action == "COPY":
-                                self.grid[target_row, target_col] = ne
+            accept = False
+            match behavior["type"]:
+                case "action":
+                    target_row = row + condition[1]
+                    target_col = col + condition[0]
+                    if 0 <= target_row < ROWS and 0 <= target_col < COLS:
+                        target_element_id = self.grid[target_row, target_col]
+                        target_element = get_element(target_element_id)
+                        accept = target_element.id == target
+                    else:
+                        skips = []
+                case "dataaction":
+                    n = data["extra"][condition[0]]
+                    n2 = data["extra"][target]
+                    accept = {"=":n==n2,">":n>n2,"<":n<n2,">=":n>=n2,"<=":n<=n2}[condition[1]]
+                case "doaction":
+                    accept = True
+                case err:
+                    raise AssertionError(f"not action or dataaction: {err}")
+
+            if accept:
+                action_row = row + action_coords[1]
+                action_col = col + action_coords[0]
+                if 0 <= action_row < ROWS and 0 <= action_col < COLS:
+                    if random.random() < chance:
+                        ne = list(elements.keys()).index(aselm)
+                        if action == "SWAP":
+                            self.grid[action_row, action_col], self.grid[row, col] = ne, self.grid[action_row, action_col]
+                            if ne == self.grid[row, col]:
+                                self.datagrid[action_row][action_col], self.datagrid[row][col] = deepcopy(self.datagrid[row][col]), deepcopy(self.datagrid[action_row][action_col])
                             else:
-                                raise CommandError(f"Invalid action: {action}. Please check that it exists and it is spelled correctly.")
+                                self.datagrid[row][col] = deepcopy(self.datagrid[action_row][action_col])
+                            output_actions.append({"action":"move","value":(action_row, action_col)})
+                        elif action == "COPY":
+                            self.grid[action_row, action_col] = ne
+                            if ne == self.grid[row, col]:
+                                self.datagrid[action_row][action_col] = deepcopy(self.datagrid[row][col])
                         else:
-                            skips = []
+                            raise CommandError(f"Invalid action: {action}.")
                     else:
                         skips = []
                 else:
@@ -132,14 +153,37 @@ class Grid:
             for skip in skips:
                 output_actions.append({"action":"skip","value":skip})
         elif behavior["type"] == "data":
-            change = behavior["change"]
-            for key in data:
-                try:
-                    data[key] |= change[key]
-                except KeyError:
-                    pass
+            change: dict[str, dict[str | int, int | OPERATION]] = behavior["change"]
+            if "ordered" in change:
+                data["ordered"] |= change["ordered"]
+            if "extra" in change:
+                for key in change["extra"].keys():
+                    val = change["extra"][key]
+                    if type(val) is int:
+                        data["extra"][key] = val
+                    elif type(val) is OPERATION:
+                        ex = data["extra"]
+                        match val.op:
+                            case '=':
+                                ex[key] = val.n
+                            case '+':
+                                ex[key] += val.n
+                            case '-':
+                                ex[key] -= val.n
+                            case 'x':
+                                ex[key] *= val.n
+                            case '/':
+                                ex[key] /= val.n
+                            case '%':
+                                ex[key] %= val.n
+                            case '^':
+                                ex[key] **= val.n
+                            case e:
+                                raise CommandError(f"Invalid operation type: {e}")
         else:
             raise AssertionError("Invalid behavior type")
+        self.datagrid[row][col] |= data["extra"]
+        self.localdata = data
         return output_actions
     
     @staticmethod
@@ -163,6 +207,7 @@ class Grid:
     def set_cell(self, row: int, col: int, element: Element):
         element_id = list(elements.values()).index(element)
         self.grid[row, col] = element_id
+        self.datagrid[row][col] = element.datadef
     
     def set_cells(self, row: int, col: int, element: Element, size: int = 1) -> None:
         csize = size - 1
