@@ -1,11 +1,14 @@
 import pygame
 from .grid import Grid
 from .panel import Panel
-from .constants import WIDTH, HEIGHT, PANEL_WIDTH, get_kn
+from .constants import WIDTH, HEIGHT, PANEL_WIDTH, get_kn, config
 from . import line
 from . import configreader
 
-config = configreader.readconf()
+# fix the circular import
+from . import elements
+elements.init()
+del elements
 
 FPS = config["settings"]["runtime"]["FPS"]
 

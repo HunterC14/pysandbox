@@ -1,25 +1,28 @@
 import os
 import re
-from .constants import OPERATION
+from .constants import OPERATION, COMPILER, CommandError
+if COMPILER:
+    from . import compiler
 
 class Element:
-    def __init__(self, name: str, eid: str, color: tuple[int, int, int], behaviors: list[dict[str, tuple[int, int] | str]], datadef: dict[int, int]):
+    def __init__(self, name: str, eid: str, color: tuple[int, int, int], behaviors: list[dict[str, tuple[int, int] | str]], datadef: dict[int, int], compiled: list | None = None):
         self.name = name
         self.color = color
         self.behaviors = behaviors
         self.id = eid
         self.datadef = datadef
+        self.compiled = compiled
 
-class CommandError(Exception): pass
 
-elements = {}
+
+elements: dict[str,Element] = {}
 
 def _gpuc(g: str) -> list[int]:
     ip = re.compile(r"-?\d+")
     im = ip.findall(g)
     return [int(x) for x in im]
 
-def parse_behavior(behavior: str) -> dict[str, tuple[int, int] | tuple[int, str] | str]:
+def parse_behavior(behavior: str) -> dict[str, tuple[int, int] | tuple[int, str] | str | int]:
     match = re.match(r"IF \(([-\d]+),([-\d]+)\) (\w+) THEN (.*)", behavior)
     match2 = re.match(r"IFDATA EXTRA KEY:(\d+) (.+) (\d+) THEN (.*)", behavior)
     match3 = re.match(r"DO (.*)", behavior)
@@ -106,7 +109,7 @@ def load_elements(filename: str):
                         current_element["key"],
                         current_element["color"],
                         current_element["behaviors"],
-                        current_element["datadef"]
+                        current_element["datadef"],
                     )
                 current_element = {"key": eid, "behaviors": [], "datadef": {}}
             elif line.startswith("NAME"):
@@ -127,11 +130,17 @@ def load_elements(filename: str):
                 eid,
                 current_element["color"],
                 current_element["behaviors"],
-                current_element["datadef"]
+                current_element["datadef"],
             )
+    if COMPILER:
+        for elem in elements.values():
+            elem.compiled = [compiler.compile_code(behavior, elements) for behavior in elem.behaviors]
 
 def get_element(element_id: int) -> Element:
     keys = list(elements.keys())
     return elements.get(keys[element_id])
 
-load_elements("elements.txt")
+def init():
+    if COMPILER:
+        compiler.load_imports()
+    load_elements("elements.txt")

@@ -3,11 +3,11 @@ import pygame
 import random
 from copy import deepcopy
 #from typing import Literal
-from .constants import CELL_SIZE, COLS, ROWS, READ, NamObj, NoneCallable, upround, OPERATION
+from .constants import CELL_SIZE, COLS, ROWS, READ, NamObj, NoneCallable, upround, OPERATION, COMPILER, CommandError, config
 import typing
-from .elements import elements, get_element, Element, CommandError
+from .elements import elements, get_element, Element
 from . import configreader
-config = configreader.readconf()
+
 
 
 cell_count = ROWS * COLS
@@ -46,8 +46,11 @@ class Grid:
                 else:
                     new = random.choice(need_doing)
                 need_doing.remove(new)
-                behavior = element.behaviors[new]
-                actions = self.apply_behavior(row, col, behavior, self.localdata)
+                if COMPILER:
+                    actions = element.compiled[new](self,row,col,self.localdata)
+                else:
+                    behavior = element.behaviors[new]
+                    actions = self.apply_behavior(row, col, behavior, self.localdata)
                 for action in actions:
                     if action["action"] == "skip":
                         skipval = action["value"] + new

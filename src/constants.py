@@ -13,6 +13,8 @@ CELL_SIZE   = display["cell-size"  ]
 WIDTH  = COLS * CELL_SIZE + PANEL_WIDTH
 HEIGHT = ROWS * CELL_SIZE
 
+COMPILER = settings["runtime"]["compiler"]
+
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -58,3 +60,5 @@ class OPERATION:
         return str(self)
 
 READ = NamObj("READ")
+
+class CommandError(Exception): pass
