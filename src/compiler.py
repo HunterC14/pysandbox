@@ -88,17 +88,20 @@ for skip in skips:
         if "ordered" in change:
             code += f"data[\"ordered\"] |= {change['ordered']}\n"
         if "extra" in change:
-            for key in change["extra"].keys():
-                val = change["extra"][key]
-                if type(val) is int:
-                    code += f"data[\"extra\"][{key}] = {val}\n"
-                elif type(val) is OPERATION:
-                    code += f"ex = data[\"extra\"]\nex[{repr(key)}] "
-                    try:
-                        code += {'=':'=','+':'+=','-':'-=','x':'*=','/':'/=','%':'%=','^':'**='}[val.op]
-                    except KeyError:
-                        raise CommandError("Invalid operation: "+val.op)
-                    code += str(val.n)+"\n"
+            if change["extra"] is None:
+                code += "self.datagrid[row][col] = {}\n"
+            else:
+                for key in change["extra"].keys():
+                    val = change["extra"][key]
+                    if type(val) is int:
+                        code += f"data[\"extra\"][{key}] = {val}\n"
+                    elif type(val) is OPERATION:
+                        code += f"ex = data[\"extra\"]\nex[{repr(key)}] "
+                        try:
+                            code += {'=':'=','+':'+=','-':'-=','x':'*=','/':'/=','%':'%=','^':'**='}[val.op]
+                        except KeyError:
+                            raise CommandError("Invalid operation: "+val.op)
+                        code += str(val.n)+"\n"
     else:
         raise AssertionError("Invalid behavior type")
     code += """

@@ -54,6 +54,8 @@ def main(screen: pygame.Surface):
                     key = None
                 if key is not None:
                     data["size"] = key
+                if event.key == pygame.K_d:
+                    print(grid.datagrid)
         
         if not data["paused"]:
             grid.update()

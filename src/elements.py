@@ -3,6 +3,7 @@ import re
 from .constants import OPERATION, COMPILER, CommandError
 if COMPILER:
     from . import compiler
+    print("using compiler")
 
 class Element:
     def __init__(self, name: str, eid: str, color: tuple[int, int, int], behaviors: list[dict[str, tuple[int, int] | str]], datadef: dict[int, int], compiled: list | None = None):
@@ -89,6 +90,13 @@ def parse_behavior(behavior: str) -> dict[str, tuple[int, int] | tuple[int, str]
             "type":"data",
             "change": {
                 "extra":{int(match.group(1)):OPERATION(match.group(2), int(match.group(3)))}
+            }
+        }
+    if behavior == "DATA DEL":
+        return {
+            "type":"data",
+            "change": {
+                "extra": None
             }
         }
 

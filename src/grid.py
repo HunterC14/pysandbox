@@ -6,7 +6,6 @@ from copy import deepcopy
 from .constants import CELL_SIZE, COLS, ROWS, READ, NamObj, NoneCallable, upround, OPERATION, COMPILER, CommandError, config
 import typing
 from .elements import elements, get_element, Element
-from . import configreader
 
 
 
@@ -104,9 +103,7 @@ class Grid:
             chance = behavior["chance"]
             skips = behavior["skips"]
             aselm = behavior["as"]
-            data = {}
             data["extra"] = self.datagrid[row][col]
-            data["ordered"] = {"value":True}
             
             accept = False
             match behavior["type"]:
@@ -160,29 +157,34 @@ class Grid:
             if "ordered" in change:
                 data["ordered"] |= change["ordered"]
             if "extra" in change:
-                for key in change["extra"].keys():
-                    val = change["extra"][key]
-                    if type(val) is int:
-                        data["extra"][key] = val
-                    elif type(val) is OPERATION:
-                        ex = data["extra"]
-                        match val.op:
-                            case '=':
-                                ex[key] = val.n
-                            case '+':
-                                ex[key] += val.n
-                            case '-':
-                                ex[key] -= val.n
-                            case 'x':
-                                ex[key] *= val.n
-                            case '/':
-                                ex[key] /= val.n
-                            case '%':
-                                ex[key] %= val.n
-                            case '^':
-                                ex[key] **= val.n
-                            case e:
-                                raise CommandError(f"Invalid operation type: {e}")
+                if change["extra"] is None:
+                    data["extra"] = {}
+                    self.datagrid[row][col] = {}
+                else:
+                    for key in change["extra"].keys():
+                        val = change["extra"][key]
+                        if type(val) is int:
+                            data["extra"][key] = val
+                        elif type(val) is OPERATION:
+                            ex = data["extra"]
+                            v = ex[val.n]
+                            match val.op:
+                                case '=':
+                                    ex[key] = v
+                                case '+':
+                                    ex[key] += v
+                                case '-':
+                                    ex[key] -= v
+                                case 'x':
+                                    ex[key] *= v
+                                case '/':
+                                    ex[key] /= v
+                                case '%':
+                                    ex[key] %= v
+                                case '^':
+                                    ex[key] **= v
+                                case e:
+                                    raise CommandError(f"Invalid operation type: {e}")
         else:
             raise AssertionError("Invalid behavior type")
         self.datagrid[row][col] |= data["extra"]
@@ -210,7 +212,7 @@ class Grid:
     def set_cell(self, row: int, col: int, element: Element):
         element_id = list(elements.values()).index(element)
         self.grid[row, col] = element_id
-        self.datagrid[row][col] = element.datadef
+        self.datagrid[row][col] = deepcopy(element.datadef)
     
     def set_cells(self, row: int, col: int, element: Element, size: int = 1) -> None:
         csize = size - 1
