@@ -3,6 +3,10 @@ from .constants import PANEL_WIDTH, WHITE, BLACK
 from .elements import elements, get_element, Element
 import typing
 
+def initp():
+    global keys
+    from .elements import keys
+
 class Panel:
     def __init__(self, grid):
         self.width = PANEL_WIDTH
@@ -21,9 +25,11 @@ class Panel:
         screen.blit(pause_text, (cx, 60))
         y = 100
         for element_id, element in elements.items():
+            if element.name[0] == "_":
+                continue
             text = font.render(element.name, True, BLACK)
             screen.blit(text, (cx, y))
-            if list(elements.keys())[self.selected_element_id] == element_id:
+            if keys[self.selected_element_id] == element_id:
                 pygame.draw.rect(screen, element.color, (screen.get_width() - self.width + 5, y - 5, self.width - 10, 30), 2)
             y += 40
 
@@ -33,8 +39,10 @@ class Panel:
             return
         y_offset = 100
         for element_id, element in elements.items():
+            if element.name[0] == "_":
+                continue
             if y_offset <= y < y_offset + 30:
-                self.selected_element_id = list(elements.keys()).index(element_id)
+                self.selected_element_id = keys.index(element_id)
                 break
             y_offset += 40
 

@@ -2,14 +2,14 @@
 COMPILER
 """
 import random
-from .constants import ROWS, COLS, OPERATION, CommandError
-from copy import deepcopy
+from .constants import ROWS, COLS, OPERATION, CommandError, config
+from copy import copy
 def load_imports():
     global get_element
     from .elements import get_element
-from types import FunctionType
+from typing import Callable
 
-def compile_code(behavior:dict[str,str|tuple[int,int]],elements)->FunctionType:
+def compile_code(behavior:dict[str,str|tuple[int,int]], keys: list, element_id)->Callable:
     code = ""
     if behavior["type"] in ("action","dataaction","doaction"):
         if behavior["type"] != "doaction":
@@ -20,6 +20,8 @@ def compile_code(behavior:dict[str,str|tuple[int,int]],elements)->FunctionType:
         chance = behavior["chance"]
         skips = behavior["skips"]
         aselm = behavior["as"]
+        if aselm is not None and aselm not in keys:
+            raise CommandError("No such element "+aselm)
         code += f"skips = {skips}\n"
         code += """
 data = {}
@@ -50,32 +52,33 @@ accept = """+{"=":"n==n2",">":"n>n2","<":"n<n2",">=":"n>=n2","<=":"n<=n2"}[condi
                 code += "accept = True\n"
             case err:
                 raise AssertionError(f"not action or dataaction: {err}")
+        if chance < 1:
+            code += f"""
+if random.random() > {chance}:
+    accept = False"""
         code += f"""
 if accept:
     action_row = row + {action_coords[1]}
     action_col = col + {action_coords[0]}
     if 0 <= action_row < {ROWS} and 0 <= action_col < {COLS}:
-        if random.random() < {chance}:
-            ne = {list(elements.keys()).index(aselm)}
+        ne = {keys.index(element_id if aselm is None else aselm)}
 """
         if action == "SWAP":
             code += """
-            self.grid[action_row, action_col], self.grid[row, col] = ne, self.grid[action_row, action_col]
-            if ne == self.grid[row, col]:
-                self.datagrid[action_row][action_col], self.datagrid[row][col] = deepcopy(self.datagrid[row][col]), deepcopy(self.datagrid[action_row][action_col])
-            else:
-                self.datagrid[row][col] = deepcopy(self.datagrid[action_row][action_col])
-            output_actions.append({"action":"move","value":(action_row, action_col)})\n"""
+        self.grid[action_row, action_col], self.grid[row, col] = ne, self.grid[action_row, action_col]
+        if ne == self.grid[row, col]:
+            self.datagrid[action_row][action_col], self.datagrid[row][col] = copy(self.datagrid[row][col]), deepcopy(self.datagrid[action_row][action_col])
+        else:
+            self.datagrid[row][col] = copy(self.datagrid[action_row][action_col])
+        output_actions.append({"action":"move","value":(action_row, action_col)})\n"""
         elif action == "COPY":
             code += """
-            self.grid[action_row, action_col] = ne
-            if ne == self.grid[row, col]:
-                self.datagrid[action_row][action_col] = deepcopy(self.datagrid[row][col])\n"""
+        self.grid[action_row, action_col] = ne
+        if ne == self.grid[row, col]:
+            self.datagrid[action_row][action_col] = copy(self.datagrid[row][col])\n"""
         else:
             raise CommandError(f"Invalid action: {action}.")
         code += """
-        else:
-            skips = []
     else:
         skips = []
 else:
@@ -101,17 +104,18 @@ for skip in skips:
                             code += {'=':'=','+':'+=','-':'-=','x':'*=','/':'/=','%':'%=','^':'**='}[val.op]
                         except KeyError:
                             raise CommandError("Invalid operation: "+val.op)
-                        code += str(val.n)+"\n"
+                        code += f" ex[{val.n}]\n"
     else:
         raise AssertionError("Invalid behavior type")
     code += """
-self.datagrid[row][col] |= data["extra"]
 self.localdata = data"""
-    #print("Compiled code:\n"+code)
+    if "debug" in config["settings"] and "pycode-output" in config["settings"]["debug"]:
+        with open(config["settings"]["debug"]["pycode-output"], "at") as f:
+            f.write(code+"\n\n##SPLIT##\n\n")
     compiled = compile(code, "compiled_code","exec")
     def func(self, row, col, data):
         outa = []
         exec(compiled, {"self":self,"row":row,"col":col,"data":data,"output_actions":outa,
-        "random":random,"deepcopy":deepcopy,"get_element":get_element,"elements":elements})
+        "random":random,"copy":copy,"get_element":get_element})
         return outa
     return func

@@ -1,13 +1,15 @@
 import numpy as np
 import pygame
 import random
-from copy import deepcopy
+from copy import copy
 #from typing import Literal
 from .constants import CELL_SIZE, COLS, ROWS, READ, NamObj, NoneCallable, upround, OPERATION, COMPILER, CommandError, config
 import typing
 from .elements import elements, get_element, Element
 
-
+def init():
+    global keys
+    from .elements import keys
 
 cell_count = ROWS * COLS
 random.seed()
@@ -130,18 +132,21 @@ class Grid:
                 action_col = col + action_coords[0]
                 if 0 <= action_row < ROWS and 0 <= action_col < COLS:
                     if random.random() < chance:
-                        ne = list(elements.keys()).index(aselm)
+                        if aselm is None:
+                            ne = self.grid[row][col]
+                        else:
+                            ne = keys.index(aselm)
                         if action == "SWAP":
                             self.grid[action_row, action_col], self.grid[row, col] = ne, self.grid[action_row, action_col]
                             if ne == self.grid[row, col]:
-                                self.datagrid[action_row][action_col], self.datagrid[row][col] = deepcopy(self.datagrid[row][col]), deepcopy(self.datagrid[action_row][action_col])
+                                self.datagrid[action_row][action_col], self.datagrid[row][col] = copy(self.datagrid[row][col]), copy(self.datagrid[action_row][action_col])
                             else:
-                                self.datagrid[row][col] = deepcopy(self.datagrid[action_row][action_col])
+                                self.datagrid[row][col] = copy(self.datagrid[action_row][action_col])
                             output_actions.append({"action":"move","value":(action_row, action_col)})
                         elif action == "COPY":
                             self.grid[action_row, action_col] = ne
                             if ne == self.grid[row, col]:
-                                self.datagrid[action_row][action_col] = deepcopy(self.datagrid[row][col])
+                                self.datagrid[action_row][action_col] = copy(self.datagrid[row][col])
                         else:
                             raise CommandError(f"Invalid action: {action}.")
                     else:
@@ -212,7 +217,7 @@ class Grid:
     def set_cell(self, row: int, col: int, element: Element):
         element_id = list(elements.values()).index(element)
         self.grid[row, col] = element_id
-        self.datagrid[row][col] = deepcopy(element.datadef)
+        self.datagrid[row][col] = copy(element.datadef)
     
     def set_cells(self, row: int, col: int, element: Element, size: int = 1) -> None:
         csize = size - 1

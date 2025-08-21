@@ -24,11 +24,11 @@ def _gpuc(g: str) -> list[int]:
     return [int(x) for x in im]
 
 def parse_behavior(behavior: str) -> dict[str, tuple[int, int] | tuple[int, str] | str | int]:
-    match = re.match(r"IF \(([-\d]+),([-\d]+)\) (\w+) THEN (.*)", behavior)
-    match2 = re.match(r"IFDATA EXTRA KEY:(\d+) (.+) (\d+) THEN (.*)", behavior)
-    match3 = re.match(r"DO (.*)", behavior)
+    match = re.match(r"^IF \(([-\d]+),([-\d]+)\) (\w+) THEN (.*)", behavior)
+    match2 = re.match(r"^IFDATA EXTRA KEY:(\d+) (.+) (\d+) THEN (.*)", behavior)
+    match3 = re.match(r"^DO (.*)", behavior)
     if match or match2 or match3:
-        m2 = re.match(r"(\w+)\(([-\d]+),([-\d]+)\) CHANCE (\d{1,3})% AS (\w+) SKIP \[((-?\d+,?)*)\]",match3.group(1)if match3 else match2.group(4)if match2 else match.group(4))
+        m2 = re.match(r"^(\w+)\(([-\d]+),([-\d]+)\)( CHANCE (\d{1,3})%)?( AS (\w+))?( SKIP \[((-?\d+,?)*)\])?$",match3.group(1)if match3 else match2.group(4)if match2 else match.group(4))
         if not m2:
             raise CommandError(f"Invalid behavior: {behavior}")
         m2: re.Match
@@ -36,9 +36,9 @@ def parse_behavior(behavior: str) -> dict[str, tuple[int, int] | tuple[int, str]
             "type":"action",
             "action": m2.group(1),
             "action_coords": (int(m2.group(2)), int(m2.group(3))),
-            "chance": int(m2.group(4))/100,
-            "skips": _gpuc(m2.group(6)),
-            "as": m2.group(5)
+            "chance": (int(m2.group(5))/100) if (m2.group(4) is not None) else 1,
+            "skips": _gpuc(m2.group(9)) if m2.group(8) is not None else [],
+            "as": m2.group(7) if m2.group(6) is not None else None
         }
         if match:
             out2 = {
@@ -103,6 +103,7 @@ def parse_behavior(behavior: str) -> dict[str, tuple[int, int] | tuple[int, str]
     raise CommandError(f"Invalid behavior: {behavior}")
 
 def load_elements(filename: str):
+    global keys
     with open(os.path.join(os.path.dirname(__file__),filename), 'r') as file:
         current_element = None
         for line in file:
@@ -140,15 +141,16 @@ def load_elements(filename: str):
                 current_element["behaviors"],
                 current_element["datadef"],
             )
+    keys = list(elements.keys())
     if COMPILER:
         for elem in elements.values():
-            elem.compiled = [compiler.compile_code(behavior, elements) for behavior in elem.behaviors]
+            elem.compiled = [compiler.compile_code(behavior, keys, elem.id) for behavior in elem.behaviors]
 
 def get_element(element_id: int) -> Element:
-    keys = list(elements.keys())
     return elements.get(keys[element_id])
 
 def init():
     if COMPILER:
         compiler.load_imports()
     load_elements("elements.txt")
+    
