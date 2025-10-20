@@ -50,8 +50,7 @@ class Grid:
                 if COMPILER:
                     actions = element.compiled[new](self,row,col,self.localdata)
                 else:
-                    behavior = element.behaviors[new]
-                    actions = self.apply_behavior(row, col, behavior, self.localdata)
+                    raise NotImplementedError("Interpreter no longer supported.")
                 for action in actions:
                     if action["action"] == "skip":
                         skipval = action["value"] + new
@@ -94,7 +93,7 @@ class Grid:
             assert False, f"Invalid order, {order}"
 
 
-    def apply_behavior(self,row:int,col:int,behavior:dict[str,str|tuple[int,int]],data:dict[str,dict[str,bool]|dict[int,int]])->list[dict[str,str|int]]:
+    def _old_interpreter(self,row:int,col:int,behavior:dict[str,str|tuple[int,int]],data:dict[str,dict[str,bool]|dict[int,int]])->list[dict[str,str|int]]:
         output_actions = []
         if behavior["type"] in ("action","dataaction","doaction"):
             if behavior["type"] != "doaction":
